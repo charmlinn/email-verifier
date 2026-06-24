@@ -48,26 +48,76 @@
               <label>
                 From Email
                 <input id="fromEmail" name="fromEmail" type="text" value="user@example.org" />
+                <span>SMTP 握手里的 MAIL FROM 发件人地址，部分邮件服务器会据此做反垃圾判断。</span>
               </label>
               <label>
                 Hello Name
                 <input id="helloName" name="helloName" type="text" value="localhost" />
+                <span>SMTP HELO/EHLO 名称，最好填当前服务域名；默认 localhost 仅适合本地测试。</span>
               </label>
               <label>
                 Connect Timeout
                 <input id="connectTimeout" name="connectTimeout" type="text" value="10s" />
+                <span>连接目标 MX 服务器的最长等待时间，例如 2s、10s。</span>
               </label>
               <label>
                 Operation Timeout
                 <input id="operationTimeout" name="operationTimeout" type="text" value="10s" />
+                <span>SMTP 握手和 RCPT 探测阶段的读写超时时间。</span>
               </label>
               <label class="wide-field">
                 SOCKS Proxy
                 <input id="proxy" name="proxy" type="text" placeholder="socks5://user:password@127.0.0.1:1080?timeout=5s" />
+                <span>当本机或云服务器封禁 25 端口时，用 SOCKS 代理发起 SMTP 探测。</span>
               </label>
             </div>
           </fieldset>
         </form>
+
+        <section class="help-panel">
+          <h2>参数说明</h2>
+          <dl>
+            <div>
+              <dt>开启 SMTP 验证</dt>
+              <dd>连接邮箱域名的 MX 服务器，尝试用 SMTP RCPT 判断邮箱是否可投递；不发送真实邮件。</dd>
+            </div>
+            <div>
+              <dt>检测 catch-all</dt>
+              <dd>先探测一个随机邮箱。如果域名接收任意地址，具体账号是否存在就无法可靠确认。</dd>
+            </div>
+            <div>
+              <dt>域名拼写建议</dt>
+              <dd>对 gmai.com 这类疑似拼写错误给出建议域名。</dd>
+            </div>
+            <div>
+              <dt>检测 Gravatar</dt>
+              <dd>查询邮箱是否有公开 Gravatar 头像，可作为账号活跃线索，不代表邮箱一定可投递。</dd>
+            </div>
+            <div>
+              <dt>Yahoo API 验证</dt>
+              <dd>仅对 Yahoo 邮箱相关 MX 生效，会模拟访问 Yahoo 注册页检查用户名是否已存在；它不是官方接口，可能受页面结构、限流或风控影响。</dd>
+            </div>
+          </dl>
+          <h2>映射结果说明</h2>
+          <dl>
+            <div>
+              <dt>decisionCode / decisionText</dt>
+              <dd>最终业务决策：可接入、建议人工复核、不建议接入或验证异常。</dd>
+            </div>
+            <div>
+              <dt>mailboxProfile</dt>
+              <dd>邮箱画像，包括企业域名/公共邮箱、角色邮箱/个人邮箱、一次性邮箱风险。</dd>
+            </div>
+            <div>
+              <dt>deliverability</dt>
+              <dd>投递判断，包括是否执行 SMTP、是否确认可收信、是否存在 catch-all 风险。</dd>
+            </div>
+            <div>
+              <dt>evidence</dt>
+              <dd>每一条判断依据，方便定位为什么被拒绝或为什么需要复核。</dd>
+            </div>
+          </dl>
+        </section>
 
         <div class="quick-row" aria-label="快速测试">
           <button type="button" data-email="support@archybase.com">业务邮箱</button>
