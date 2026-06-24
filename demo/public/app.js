@@ -1,6 +1,7 @@
 const form = document.querySelector("#verify-form");
 const emailInput = document.querySelector("#email");
-const result = document.querySelector("#result");
+const originalResult = document.querySelector("#original-result");
+const mappedResult = document.querySelector("#mapped-result");
 const statusPill = document.querySelector("#status-pill");
 const requestPath = document.querySelector("#request-path");
 
@@ -11,25 +12,41 @@ function setStatus(text, state) {
 
 async function verifyEmail(email) {
   setStatus("请求中", "loading");
-  result.textContent = "Calling API...";
+  originalResult.textContent = "Calling API...";
+  mappedResult.textContent = "Waiting for mapped result...";
   requestPath.textContent = `GET /v1/${email}/verification`;
 
   try {
     const response = await fetch(`/api/verify?email=${encodeURIComponent(email)}`);
     const text = await response.text();
-    let payload = text;
+    let payload;
 
     try {
-      payload = JSON.stringify(JSON.parse(text), null, 2);
+      payload = JSON.parse(text);
     } catch (_) {
-      // Keep raw text if the upstream response is not JSON.
+      payload = {
+        original: text,
+        mapped: {
+          status: "error",
+          statusText: "非 JSON 响应",
+        },
+      };
     }
 
     setStatus(`${response.status} ${response.ok ? "OK" : "ERROR"}`, response.ok ? "ok" : "error");
-    result.textContent = payload;
+    originalResult.textContent = JSON.stringify(payload.original ?? payload, null, 2);
+    mappedResult.textContent = JSON.stringify(payload.mapped ?? {}, null, 2);
   } catch (err) {
     setStatus("调用失败", "error");
-    result.textContent = err.message;
+    originalResult.textContent = err.message;
+    mappedResult.textContent = JSON.stringify(
+      {
+        status: "error",
+        statusText: "调用失败",
+      },
+      null,
+      2,
+    );
   }
 }
 

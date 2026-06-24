@@ -31,6 +31,99 @@ function sendFile(res, filePath, contentType) {
   });
 }
 
+function mapReachable(reachable) {
+  if (reachable === "yes") {
+    return {
+      canReceiveEmail: true,
+      label: "可达",
+      confidence: "high",
+    };
+  }
+
+  if (reachable === "no") {
+    return {
+      canReceiveEmail: false,
+      label: "不可达",
+      confidence: "high",
+    };
+  }
+
+  return {
+    canReceiveEmail: null,
+    label: "未知",
+    confidence: "low",
+  };
+}
+
+function mapVerificationResult(original) {
+  if (!original || original.error) {
+    return {
+      status: "error",
+      statusText: "调用失败",
+      message: original?.error || "API returned an empty response",
+      acceptEmail: false,
+      riskLevel: "high",
+      reasons: ["api_error"],
+    };
+  }
+
+  const syntaxValid = Boolean(original.syntax?.valid);
+  const reachable = mapReachable(original.reachable);
+  const reasons = [];
+
+  if (!syntaxValid) reasons.push("syntax_invalid");
+  if (original.disposable) reasons.push("disposable_email");
+  if (!original.has_mx_records) reasons.push("missing_mx_records");
+  if (original.role_account) reasons.push("role_account");
+  if (original.reachable === "no") reasons.push("reachable_no");
+  if (original.reachable === "unknown") reasons.push("reachable_unknown");
+
+  let status = "accepted";
+  let statusText = "可接入";
+  let riskLevel = "low";
+  let acceptEmail = true;
+
+  if (!syntaxValid || original.disposable || !original.has_mx_records || original.reachable === "no") {
+    status = "rejected";
+    statusText = "不建议接入";
+    riskLevel = "high";
+    acceptEmail = false;
+  } else if (original.role_account || original.reachable === "unknown") {
+    status = "review";
+    statusText = "建议人工复核";
+    riskLevel = "medium";
+  }
+
+  return {
+    email: original.email,
+    username: original.syntax?.username || "",
+    domain: original.syntax?.domain || "",
+    normalizedEmail:
+      original.syntax?.username && original.syntax?.domain
+        ? `${original.syntax.username}@${original.syntax.domain}`
+        : original.email,
+    status,
+    statusText,
+    acceptEmail,
+    riskLevel,
+    reasons,
+    reachability: {
+      raw: original.reachable,
+      ...reachable,
+    },
+    checks: {
+      syntaxValid,
+      hasMxRecords: Boolean(original.has_mx_records),
+      disposable: Boolean(original.disposable),
+      roleAccount: Boolean(original.role_account),
+      freeProvider: Boolean(original.free),
+      hasSmtpResult: Boolean(original.smtp),
+      hasGravatar: Boolean(original.gravatar),
+      suggestion: original.suggestion || null,
+    },
+  };
+}
+
 async function proxyVerification(req, res, url) {
   const email = url.searchParams.get("email");
   if (!email) {
@@ -44,16 +137,28 @@ async function proxyVerification(req, res, url) {
       signal: AbortSignal.timeout(35000),
     });
     const body = await upstream.text();
+    let original;
 
-    res.writeHead(upstream.status, {
-      "Content-Type": upstream.headers.get("content-type") || "application/json; charset=utf-8",
+    try {
+      original = JSON.parse(body);
+    } catch (_) {
+      original = { error: body || "upstream returned a non-JSON response" };
+    }
+
+    sendJSON(res, upstream.status, {
+      original,
+      mapped: mapVerificationResult(original),
     });
-    res.end(body);
   } catch (err) {
     sendJSON(res, 502, {
-      error: "failed to call email verifier API",
-      detail: err.message,
-      apiBaseURL,
+      original: {
+        error: "failed to call email verifier API",
+        detail: err.message,
+        apiBaseURL,
+      },
+      mapped: mapVerificationResult({
+        error: "failed to call email verifier API",
+      }),
     });
   }
 }

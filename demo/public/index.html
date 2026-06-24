@@ -23,6 +23,7 @@
         </form>
 
         <div class="quick-row" aria-label="快速测试">
+          <button type="button" data-email="support@archybase.com">业务邮箱</button>
           <button type="button" data-email="test@gmail.com">Gmail</button>
           <button type="button" data-email="hello@gmai.com">拼写建议</button>
           <button type="button" data-email="not-an-email">无效格式</button>
@@ -33,7 +34,16 @@
             <span id="status-pill" class="pill">待测试</span>
             <span id="request-path" class="path">GET /v1/{email}/verification</span>
           </div>
-          <pre id="result">输入邮箱后点击验证。</pre>
+          <div class="result-grid">
+            <article class="result-column">
+              <h2>原始返回</h2>
+              <pre id="original-result">输入邮箱后点击验证。</pre>
+            </article>
+            <article class="result-column">
+              <h2>映射结果</h2>
+              <pre id="mapped-result">等待映射结果。</pre>
+            </article>
+          </div>
         </section>
       </section>
     </main>
