@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Email Verifier Demo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="panel">
+        <div class="heading">
+          <p class="eyebrow">Email Verifier</p>
+          <h1>API 调用测试</h1>
+        </div>
+
+        <form id="verify-form" class="form">
+          <label for="email">Email</label>
+          <div class="field-row">
+            <input id="email" name="email" type="email" value="test@gmail.com" autocomplete="email" required />
+            <button type="submit">验证</button>
+          </div>
+        </form>
+
+        <div class="quick-row" aria-label="快速测试">
+          <button type="button" data-email="test@gmail.com">Gmail</button>
+          <button type="button" data-email="hello@gmai.com">拼写建议</button>
+          <button type="button" data-email="not-an-email">无效格式</button>
+        </div>
+
+        <section class="result-panel" aria-live="polite">
+          <div class="result-header">
+            <span id="status-pill" class="pill">待测试</span>
+            <span id="request-path" class="path">GET /v1/{email}/verification</span>
+          </div>
+          <pre id="result">输入邮箱后点击验证。</pre>
+        </section>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -12,39 +13,56 @@ import (
 	emailVerifier "github.com/AfterShip/email-verifier"
 )
 
+type apiError struct {
+	Error string `json:"error"`
+}
+
+var verifier = emailVerifier.NewVerifier()
+
+func writeJSON(w http.ResponseWriter, statusCode int, payload any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	if err := json.NewEncoder(w).Encode(payload); err != nil {
+		log.Printf("write response failed: %v", err)
+	}
+}
+
 func GetEmailVerification(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	verifier := emailVerifier.NewVerifier()
 	ret, err := verifier.Verify(ps.ByName("email"))
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		writeJSON(w, http.StatusInternalServerError, apiError{Error: err.Error()})
 		return
 	}
 	if !ret.Syntax.Valid {
-		_, _ = fmt.Fprint(w, "email address syntax is invalid")
+		writeJSON(w, http.StatusBadRequest, apiError{Error: "email address syntax is invalid"})
 		return
 	}
 
-	bytes, err := json.Marshal(ret)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
+	writeJSON(w, http.StatusOK, ret)
+}
 
-	_, _ = fmt.Fprint(w, string(bytes))
-
+func GetHealth(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func main() {
 	router := httprouter.New()
 
+	router.GET("/healthz", GetHealth)
 	router.GET("/v1/:email/verification", GetEmailVerification)
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	server := &http.Server{
-		Addr:         ":8080",
+		Addr:         fmt.Sprintf(":%s", port),
 		Handler:      router,
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
 
+	log.Printf("email verifier API listening on %s", server.Addr)
 	log.Fatal(server.ListenAndServe())
 }
