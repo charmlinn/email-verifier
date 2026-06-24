@@ -5,6 +5,18 @@ const path = require("node:path");
 const port = Number(process.env.PORT || 3000);
 const apiBaseURL = (process.env.API_BASE_URL || "http://127.0.0.1:8080").replace(/\/$/, "");
 const publicDir = path.join(__dirname, "public");
+const verifierParams = [
+  "smtp",
+  "catchAll",
+  "suggest",
+  "gravatar",
+  "yahooApi",
+  "fromEmail",
+  "helloName",
+  "proxy",
+  "connectTimeout",
+  "operationTimeout",
+];
 
 function sendJSON(res, statusCode, payload) {
   const body = JSON.stringify(payload);
@@ -56,6 +68,17 @@ function mapReachable(reachable) {
 }
 
 function mapVerificationResult(original) {
+  if (original?.result && original.error) {
+    const mapped = mapVerificationResult(original.result);
+    return {
+      ...mapped,
+      status: "error",
+      statusText: "验证异常",
+      message: original.error,
+      reasons: [...new Set([...(mapped.reasons || []), "verification_error"])],
+    };
+  }
+
   if (!original || original.error) {
     return {
       status: "error",
@@ -132,7 +155,15 @@ async function proxyVerification(req, res, url) {
   }
 
   try {
-    const upstream = await fetch(`${apiBaseURL}/v1/${encodeURIComponent(email)}/verification`, {
+    const upstreamURL = new URL(`${apiBaseURL}/v1/${encodeURIComponent(email)}/verification`);
+    for (const param of verifierParams) {
+      const value = url.searchParams.get(param);
+      if (value !== null && value !== "") {
+        upstreamURL.searchParams.set(param, value);
+      }
+    }
+
+    const upstream = await fetch(upstreamURL, {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(35000),
     });
@@ -148,6 +179,9 @@ async function proxyVerification(req, res, url) {
     sendJSON(res, upstream.status, {
       original,
       mapped: mapVerificationResult(original),
+      upstream: {
+        url: upstreamURL.pathname + upstreamURL.search,
+      },
     });
   } catch (err) {
     sendJSON(res, 502, {

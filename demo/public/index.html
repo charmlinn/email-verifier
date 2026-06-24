@@ -17,9 +17,56 @@
         <form id="verify-form" class="form">
           <label for="email">Email</label>
           <div class="field-row">
-            <input id="email" name="email" type="email" value="test@gmail.com" autocomplete="email" required />
+            <input id="email" name="email" type="text" value="test@gmail.com" autocomplete="email" required />
             <button type="submit">验证</button>
           </div>
+
+          <fieldset class="options">
+            <legend>验证参数</legend>
+            <label class="check-option">
+              <input id="smtp" name="smtp" type="checkbox" />
+              <span>开启 SMTP 验证</span>
+            </label>
+            <label class="check-option">
+              <input id="catchAll" name="catchAll" type="checkbox" checked />
+              <span>检测 catch-all</span>
+            </label>
+            <label class="check-option">
+              <input id="suggest" name="suggest" type="checkbox" checked />
+              <span>域名拼写建议</span>
+            </label>
+            <label class="check-option">
+              <input id="gravatar" name="gravatar" type="checkbox" />
+              <span>检测 Gravatar</span>
+            </label>
+            <label class="check-option">
+              <input id="yahooApi" name="yahooApi" type="checkbox" />
+              <span>Yahoo API 验证</span>
+            </label>
+
+            <div class="option-fields">
+              <label>
+                From Email
+                <input id="fromEmail" name="fromEmail" type="text" value="user@example.org" />
+              </label>
+              <label>
+                Hello Name
+                <input id="helloName" name="helloName" type="text" value="localhost" />
+              </label>
+              <label>
+                Connect Timeout
+                <input id="connectTimeout" name="connectTimeout" type="text" value="10s" />
+              </label>
+              <label>
+                Operation Timeout
+                <input id="operationTimeout" name="operationTimeout" type="text" value="10s" />
+              </label>
+              <label class="wide-field">
+                SOCKS Proxy
+                <input id="proxy" name="proxy" type="text" placeholder="socks5://user:password@127.0.0.1:1080?timeout=5s" />
+              </label>
+            </div>
+          </fieldset>
         </form>
 
         <div class="quick-row" aria-label="快速测试">
