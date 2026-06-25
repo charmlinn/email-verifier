@@ -3,7 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const port = Number(process.env.PORT || 3000);
-const apiBaseURL = (process.env.API_BASE_URL || "http://127.0.0.1:8080").replace(/\/$/, "");
+const apiBaseURL = (process.env.API_BASE_URL || "http://127.0.0.1:9090").replace(/\/$/, "");
 const publicDir = path.join(__dirname, "public");
 const verifierParams = [
   "smtp",

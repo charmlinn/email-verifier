@@ -5,9 +5,9 @@ services:
     image: email-verifier-api:local
     container_name: email-verifier-api
     environment:
-      PORT: "8080"
+      PORT: "9090"
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:9090:9090"
     restart: unless-stopped
 
   demo:
@@ -16,7 +16,7 @@ services:
     working_dir: /app
     environment:
       PORT: "3000"
-      API_BASE_URL: "http://api:8080"
+      API_BASE_URL: "http://api:9090"
     ports:
       - "127.0.0.1:3000:3000"
     volumes:

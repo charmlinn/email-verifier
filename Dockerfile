@@ -15,12 +15,12 @@ RUN adduser -D -H -u 10001 appuser
 WORKDIR /app
 COPY --from=build /out/email-verifier-api /app/email-verifier-api
 
-ENV PORT=8080
-EXPOSE 8080
+ENV PORT=9090
+EXPOSE 9090
 
 USER appuser
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:8080/healthz >/dev/null || exit 1
+  CMD wget -qO- http://127.0.0.1:9090/healthz >/dev/null || exit 1
 
 ENTRYPOINT ["/app/email-verifier-api"]
